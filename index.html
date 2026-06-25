@@ -96,6 +96,14 @@
             background: url('https://cdn.jsdelivr.net/gh/jyh318/images@main/fog.jpg') center/cover no-repeat;
         }
 
+        .weatherPanel.dull {
+            background: url('https://cdn.jsdelivr.net/gh/jyh318/images@main/dull.jpg') center/cover no-repeat;
+        }
+
+        .weatherPanel.thunder {
+            background: url('https://cdn.jsdelivr.net/gh/jyh318/images@main/thunder.jpg') center/cover no-repeat;
+        }
+
         .weatherOverlay {
             position: absolute;
             top: 0;
@@ -1789,14 +1797,18 @@
                 weatherPanel.className = 'weatherPanel default';
                 if (weatherDesc.includes('晴')) {
                     weatherPanel.classList.add('sunny');
-                } else if (weatherDesc.includes('多云') || weatherDesc.includes('阴')) {
+                } else if (weatherDesc.includes('多云')) {
                     weatherPanel.classList.add('cloudy');
-                } else if (weatherDesc.includes('雨') || weatherDesc.includes('雷')) {
+                } else if (weatherDesc.includes('雨')) {
                     weatherPanel.classList.add('rainy');
                 } else if (weatherDesc.includes('雪')) {
                     weatherPanel.classList.add('snowy');
                 }else if (weatherDesc.includes('雾')) {
                     weatherPanel.classList.add('fog');
+                }else if (weatherDesc.includes('阴')) {
+                    weatherPanel.classList.add('dull');
+                }else if (weatherDesc.includes('雷')) {
+                    weatherPanel.classList.add('thunder');
                 }
                 
                 cityEl.textContent = currentCity;
