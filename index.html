@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网页版时薪小组件</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #0f172a;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .dashboard {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .leftPanel {
+            flex: 25;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .middlePanel {
+            flex: 50;
+            height: 100%;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .rightPanel {
+            flex: 25;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        .weatherPanel {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            transition: background 1s ease;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+        }
+
+        .weatherPanel.sunny {
+            background: url('https://cdn.jsdelivr.net/gh/jyh318/images@main/sunny.jpg') center/cover no-repeat;
+        }
+
+        .weatherPanel.cloudy {
+            background: url('https://cdn.jsdelivr.net/gh/jyh318/images@main/cloudy.jpg') center/cover no-repeat;
+        }
+
+        .weatherPanel.rainy {
+            background: url('https://cdn.jsdelivr.net/gh/jyh318/images@main/rainy.jpg') center/cover no-repeat;
+        }
+
+        .weatherPanel.snowy {
+            background: url('https://cdn.jsdelivr.net/gh/jyh318/images@main/snowy.jpg') center/cover no-repeat;
+        }
+
+        .weatherOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.2) 100%);
+            pointer-events: none;
+        }
+
+        .weatherContent {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .weatherHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .weatherCity {
+            font-size: 20px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .changeCityBtn {
+            padding: 6px 12px;
+            font-size: 11px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .changeCityBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .weatherMain {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .weatherTemp {
+            font-size: 80px;
+            font-weight: 700;
+            line-height: 1;
+            margin-left: -4px;
+            text-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .weatherStatus {
+            font-size: 24px;
+            font-weight: 300;
+            opacity: 0.9;
+            margin-top: 8px;
+        }
+
+        .weatherDetails {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 18px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .weatherDetailItem {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .clouds {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .cloud1, .cloud2, .cloud3 {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 100px;
+            filter: blur(30px);
+        }
+
+        .cloud1 {
+            width: 200px;
+            height: 60px;
+            top: 20%;
+            left: -100px;
+            animation: float 20s infinite linear;
+        }
+
+        .cloud2 {
+            width: 300px;
+            height: 100px;
+            top: 50%;
+            right: -150px;
+            animation: float 25s infinite linear reverse;
+        }
+
+        .cloud3 {
+            width: 150px;
+            height: 50px;
+            top: 10%;
+            right: 10%;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            from { transform: translateX(-80px); }
+            to { transform: translateX(calc(100vw * 0.25 + 100px)); }
+        }
+
+        .clockCard {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            color: white;
+        }
+
+        .clockTime {
+            font-size: 48px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -1px;
+            color: #60a5fa;
+        }
+
+        .clockDateInfo {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .clockLunar {
+            margin-top: 4px;
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        .salaryCard {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            color: white;
+            position: relative;
+        }
+
+        .modifyBtn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modifyBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .clearCacheBtn {
+            position: absolute;
+            top: 56px;
+            right: 16px;
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #fca5a5;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .clearCacheBtn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: white;
+        }
+
+        .salaryTitle {
+            font-size: 14px;
+            opacity: 0.6;
+            margin-bottom: 8px;
+        }
+
+        .salaryAmount {
+            font-size: 40px;
+            font-weight: 700;
+            color: #fbbf24;
+            margin-bottom: 8px;
+        }
+
+        .salaryHint {
+            font-size: 12px;
+            opacity: 0.6;
+        }
+
+        .countdownCard {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            color: white;
+        }
+
+        .countdownTitle {
+            font-size: 14px;
+            opacity: 0.6;
+            margin-bottom: 16px;
+        }
+
+        .countdownProgressBar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .countdownProgressFill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 4px;
+            transition: width 1s linear;
+        }
+
+        .countdownText {
+            font-size: 48px;
+            font-weight: 700;
+            color: #818cf8;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .countdownHint {
+            font-size: 14px;
+            opacity: 0.6;
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .quoteCard {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            color: white;
+        }
+
+        .quoteTitle {
+            font-size: 14px;
+            opacity: 0.6;
+            margin-bottom: 16px;
+        }
+
+        .quoteContent {
+            font-size: 18px;
+            line-height: 1.6;
+            font-style: italic;
+            opacity: 0.9;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quoteAuthor {
+            font-size: 12px;
+            opacity: 0.5;
+            text-align: right;
+            margin-top: 12px;
+        }
+
+        .calendarPanel {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            overflow: hidden;
+        }
+
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #ddd, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 90px 40px, #fff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+            opacity: 0.3;
+            animation: shine 4s infinite alternate;
+        }
+
+        @keyframes shine {
+            from { opacity: 0.2; }
+            to { opacity: 0.5; }
+        }
+
+        .aurora {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+            filter: blur(60px);
+            animation: rotate 30s infinite linear;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .calendarContent {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .calendarHeader {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .calendarHeaderLeft {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .todayBtn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .todayBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .calendarBigDay {
+            font-size: 64px;
+            font-weight: 800;
+            line-height: 1;
+            color: white;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .calendarMonthYear {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .calendarMonth {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .calendarYear {
+            font-size: 16px;
+            opacity: 0.6;
+        }
+
+        .calendarGrid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+            flex: 1;
+        }
+
+        .calendarWeekday {
+            font-size: 16px;
+            opacity: 0.6;
+            text-align: center;
+            padding: 12px 0;
+            font-weight: 500;
+        }
+
+        .calendarDay {
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            border-radius: 10px;
+            transition: background 0.2s;
+            opacity: 0.5;
+        }
+
+        .calendarDay.currentMonth {
+            opacity: 0.8;
+        }
+
+        .calendarDay.today {
+            background: #6366f1;
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            opacity: 1;
+        }
+
+        .calendarDay.weekend {
+            color: #f87171;
+        }
+
+        .calendarDay.selected {
+            background: rgba(255, 255, 255, 0.5);
+            color: white;
+            font-weight: 600;
+            opacity: 1;
+        }
+
+        .calendarDay.clickable {
+            cursor: pointer;
+        }
+
+        .calendarDay.clickable:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .calendarSchedule {
+            flex: 0 0 25%;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .scheduleHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scheduleTitle {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .addScheduleBtn {
+            padding: 4px 10px;
+            font-size: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .addScheduleBtn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .scheduleList {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .scheduleItem {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scheduleItem:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .scheduleItem.completed {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .scheduleItem.completed:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .scheduleCheckbox {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .scheduleCheckbox.checked {
+            background: rgba(255, 255, 255, 0.5);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .scheduleCheckbox.checked::after {
+            content: '✓';
+            font-size: 12px;
+            color: white;
+        }
+
+        .scheduleText {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .scheduleItem.completed .scheduleText {
+            text-decoration: line-through;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .modal-content {
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 32px;
+            width: 90%;
+            max-width: 480px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            color: white;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .radio-item input {
+            width: 18px;
+            height: 18px;
+            accent-color: #6366f1;
+        }
+
+        .radio-item label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .btn-cancel:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 12px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard {
+                flex-direction: column;
+                overflow-y: auto;
+                height: auto;
+                min-height: 100vh;
+            }
+            
+            .leftPanel, .middlePanel, .rightPanel {
+                flex: none;
+                width: 100%;
+                height: auto;
+                min-height: 300px;
+            }
+
+            .middlePanel {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 1fr);
+            }
+
+            .weatherTemp {
+                font-size: 60px;
+            }
+
+            .calendarBigDay {
+                font-size: 48px;
+            }
+
+            .clockTime {
+                font-size: 36px;
+            }
+
+            .countdownText {
+                font-size: 36px;
+            }
+
+            .salaryAmount {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="leftPanel">
+            <div class="weatherPanel default" id="weatherPanel">
+                <div class="weatherOverlay"></div>
+                <div class="clouds">
+                    <div class="cloud1"></div>
+                    <div class="cloud2"></div>
+                    <div class="cloud3"></div>
+                </div>
+                <div class="weatherContent">
+                    <div class="weatherHeader">
+                        <div class="weatherCity" id="weatherCity">北京</div>
+                        <button class="changeCityBtn" onclick="changeCity()">切换城市</button>
+                    </div>
+                    <div class="weatherMain">
+                        <div class="weatherTemp" id="weatherTemp">--°C</div>
+                        <div class="weatherStatus" id="weatherStatus">加载中...</div>
+                    </div>
+                    <div class="weatherDetails">
+                        <div class="weatherDetailItem">
+                            <span>最高温度</span>
+                            <span id="weatherHigh">--°C</span>
+                        </div>
+                        <div class="weatherDetailItem">
+                            <span>最低温度</span>
+                            <span id="weatherLow">--°C</span>
+                        </div>
+                        <div class="weatherDetailItem">
+                            <span>体感温度</span>
+                            <span id="weatherRealFeel">--°C</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="middlePanel">
+            <div class="clockCard">
+                <div class="clockTime" id="timeDisplay">00:00:00</div>
+                <div class="clockDateInfo" id="dateInfo">
+                    <span id="dateDisplay">--</span>
+                    <span id="weekDisplay">--</span>
+                </div>
+                <div class="clockLunar" id="lunarDisplay">农历加载中...</div>
+            </div>
+
+            <div class="salaryCard">
+                <button class="modifyBtn" onclick="showSettingsModal()">修改设置</button>
+                <button class="clearCacheBtn" onclick="clearAllCache()">清除缓存</button>
+                <div class="salaryTitle">今日已赚工资</div>
+                <div class="salaryAmount" id="salaryAmount">¥0.00</div>
+                <div class="salaryHint" id="salaryHint"></div>
+            </div>
+
+            <div class="countdownCard">
+                <div class="countdownTitle">下班倒计时</div>
+                <div class="countdownProgressBar">
+                    <div class="countdownProgressFill" id="progressFill"></div>
+                </div>
+                <div class="countdownText" id="countdownText">00:00:00</div>
+                <div class="countdownHint" id="countdownHint">距离下班还有</div>
+            </div>
+
+            <div class="quoteCard">
+                <div class="quoteTitle">每日励志</div>
+                <div class="quoteContent" id="quoteContent">加载中...</div>
+                <div class="quoteAuthor" id="quoteAuthor"></div>
+            </div>
+        </div>
+
+        <div class="rightPanel">
+            <div class="calendarPanel">
+                <div class="stars"></div>
+                <div class="aurora"></div>
+                <div class="calendarContent">
+                    <div class="calendarHeader">
+                        <div class="calendarHeaderLeft">
+                            <div class="calendarBigDay" id="bigDay">--</div>
+                            <div class="calendarMonthYear">
+                                <div class="calendarMonth" id="monthDisplay">--</div>
+                                <div class="calendarYear" id="yearDisplay">--</div>
+                            </div>
+                        </div>
+                        <button class="todayBtn" onclick="goToToday()">回到今日</button>
+                    </div>
+                    <div class="calendarGrid" id="calendarGrid"></div>
+                    <div class="calendarSchedule">
+                        <div class="scheduleHeader">
+                            <div class="scheduleTitle" id="scheduleTitle">日程安排</div>
+                            <button class="addScheduleBtn" onclick="addSchedule()">添加日程</button>
+                        </div>
+                        <div class="scheduleList" id="scheduleList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="scheduleModal">
+        <div class="modal-content">
+            <div class="modal-title" id="scheduleModalTitle">添加日程</div>
+            <form id="scheduleForm">
+                <div class="form-group">
+                    <label class="form-label">日程内容</label>
+                    <input type="text" class="form-input" id="scheduleInput" placeholder="请输入日程内容">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeScheduleModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal-content">
+            <div class="modal-title">薪资设置</div>
+            <form id="settingsForm">
+                <div class="form-group">
+                    <label class="form-label">月薪（元）</label>
+                    <input type="number" class="form-input" id="salaryInput" placeholder="请输入月薪" min="0" step="0.01">
+                    <div class="error-message" id="salaryError">请输入有效薪资</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">休息方案</label>
+                    <div class="radio-group">
+                        <div class="radio-item">
+                            <input type="radio" name="restPlan" id="restDouble" value="double" checked>
+                            <label for="restDouble">双休制</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="restPlan" id="restSingleDouble" value="singleDouble">
+                            <label for="restSingleDouble">单双休制</label>
+                        </div>
+                        <div class="radio-item">
+                            <input type="radio" name="restPlan" id="restCustom" value="custom">
+                            <label for="restCustom">自定义月休</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="customRestGroup" style="display: none;">
+                    <label class="form-label">每月休息天数</label>
+                    <input type="number" class="form-input" id="customRestDays" placeholder="请输入休息天数" min="0" max="31">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">上班时间</label>
+                    <input type="time" class="form-input" id="workStartInput" value="09:00">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">下班时间</label>
+                    <input type="time" class="form-input" id="workEndInput" value="18:00">
+                    <div class="error-message" id="timeError">下班时间不能早于上班时间</div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeSettingsModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存设置</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="cityModal">
+        <div class="modal-content">
+            <div class="modal-title">切换城市</div>
+            <form id="cityForm">
+                <div class="form-group">
+                    <label class="form-label">城市名称</label>
+                    <input type="text" class="form-input" id="cityInput" placeholder="请输入城市名称">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-cancel" onclick="closeCityModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">确定</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const WEEK_DAY = ["周日", "周一", "周二", "周三", "周四", "周五", "周六"];
+
+        const QUOTES = [
+            { content: "成功不是将来才有的，而是从决定去做的那一刻起，持续累积而成。", author: "俞敏洪" },
+            { content: "生活不是等待风暴过去，而是学会在雨中翩翩起舞。", author: "维维安·格林" },
+            { content: "只有那些敢于相信自己内心深处有比现实更强大力量的人，才能改变世界。", author: "乔布斯" },
+            { content: "每一个不曾起舞的日子，都是对生命的辜负。", author: "尼采" },
+            { content: "不要等待机会，而要创造机会。", author: "林肯" },
+            { content: "人生最大的挑战是发现自己是谁，而第二大的挑战是对所发现的感到满意。", author: "罗杰·塞尔夫" },
+            { content: "当你想放弃的时候，想想当初为什么坚持到这里。", author: "科比·布莱恩特" },
+            { content: "成功的秘诀在于始终如一地坚持目标。", author: "林肯" },
+            { content: "时间是最公平的资源，每个人每天都有24小时。", author: "佚名" },
+            { content: "你的潜力比你想象的要大得多。", author: "佚名" },
+            { content: "今天的努力是明天的收获，今天的付出是明天的成功。", author: "佚名" },
+            { content: "不要让昨天的遗憾，成为今天的阻碍。", author: "佚名" },
+            { content: "每一次挫折都是成长的机会。", author: "佚名" },
+            { content: "只有不断挑战自己，才能超越自己。", author: "佚名" },
+            { content: "心若向阳，无畏悲伤。", author: "佚名" }
+        ];
+
+        let config = {
+            salary: 0,
+            restPlan: 'double',
+            customRestDays: 8,
+            workStart: '09:00',
+            workEnd: '18:00'
+        };
+
+        let weatherData = null;
+        let currentCity = '成都';
+
+        // 日历状态
+        let calendarState = {
+            displayYear: null,
+            displayMonth: null,
+            selectedDay: null
+        };
+
+        // 日程数据
+        let schedules = {};
+
+        // 日程编辑状态
+        let editingScheduleIndex = null;
+
+        function getBeijingTime() {
+            const now = new Date();
+            const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+            return new Date(utc + 8 * 3600000);
+        }
+
+        function updateTime() {
+            const now = getBeijingTime();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('timeDisplay').textContent = `${hours}:${minutes}:${seconds}`;
+
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const day = now.getDate();
+            const week = WEEK_DAY[now.getDay()];
+            
+            document.getElementById('dateDisplay').textContent = `${month}月${day}日`;
+            document.getElementById('weekDisplay').textContent = week;
+            document.getElementById('yearDisplay').textContent = year;
+            document.getElementById('monthDisplay').textContent = `${month}月`;
+            document.getElementById('bigDay').textContent = day;
+
+            let lunarStr = '';
+            if (weatherData && weatherData.condition && weatherData.condition.lunar_date) {
+                lunarStr = weatherData.condition.lunar_date;
+            } else {
+                lunarStr = '农历加载中...';
+            }
+
+            document.getElementById('lunarDisplay').textContent = lunarStr;
+        }
+
+        function renderCalendar() {
+            const now = getBeijingTime();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth();
+            const currentDay = now.getDate();
+
+            // 初始化日历状态
+            if (calendarState.displayYear === null) {
+                calendarState.displayYear = currentYear;
+                calendarState.displayMonth = currentMonth;
+                calendarState.selectedDay = currentDay;
+            }
+
+            const displayYear = calendarState.displayYear;
+            const displayMonth = calendarState.displayMonth;
+            const selectedDay = calendarState.selectedDay;
+
+            // 更新显示
+            document.getElementById('monthDisplay').textContent = `${displayMonth + 1}月`;
+            document.getElementById('yearDisplay').textContent = displayYear;
+            document.getElementById('bigDay').textContent = selectedDay;
+
+            const firstDay = new Date(displayYear, displayMonth, 1).getDay();
+            const daysInMonth = new Date(displayYear, displayMonth + 1, 0).getDate();
+            const daysInPrevMonth = new Date(displayYear, displayMonth, 0).getDate();
+
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            weekdays.forEach(w => {
+                const el = document.createElement('div');
+                el.className = 'calendarWeekday';
+                el.textContent = w;
+                grid.appendChild(el);
+            });
+
+            // 上月日期
+            for (let i = firstDay - 1; i >= 0; i--) {
+                const day = daysInPrevMonth - i;
+                const el = document.createElement('div');
+                el.className = 'calendarDay clickable';
+                el.textContent = day;
+                el.onclick = () => {
+                    calendarState.displayMonth = displayMonth - 1;
+                    if (calendarState.displayMonth < 0) {
+                        calendarState.displayMonth = 11;
+                        calendarState.displayYear = displayYear - 1;
+                    }
+                    calendarState.selectedDay = day;
+                    renderCalendar();
+                    renderSchedules();
+                };
+                grid.appendChild(el);
+            }
+
+            // 本月日期
+            for (let i = 1; i <= daysInMonth; i++) {
+                const el = document.createElement('div');
+                el.className = 'calendarDay currentMonth clickable';
+                
+                // 判断是否为今天
+                if (displayYear === currentYear && displayMonth === currentMonth && i === currentDay) {
+                    el.classList.add('today');
+                }
+                
+                // 判断是否为选中日期
+                if (i === selectedDay) {
+                    el.classList.add('selected');
+                }
+                
+                const dayOfWeek = (firstDay + i - 1) % 7;
+                if (dayOfWeek === 0 || dayOfWeek === 6) {
+                    el.classList.add('weekend');
+                }
+                
+                el.textContent = i;
+                el.onclick = () => {
+                    calendarState.selectedDay = i;
+                    renderCalendar();
+                    renderSchedules();
+                };
+                grid.appendChild(el);
+            }
+
+            // 下月日期
+            const remaining = 42 - (firstDay + daysInMonth);
+            for (let i = 1; i <= remaining; i++) {
+                const el = document.createElement('div');
+                el.className = 'calendarDay clickable';
+                el.textContent = i;
+                el.onclick = () => {
+                    calendarState.displayMonth = displayMonth + 1;
+                    if (calendarState.displayMonth > 11) {
+                        calendarState.displayMonth = 0;
+                        calendarState.displayYear = displayYear + 1;
+                    }
+                    calendarState.selectedDay = i;
+                    renderCalendar();
+                    renderSchedules();
+                };
+                grid.appendChild(el);
+            }
+        }
+
+        function goToToday() {
+            const now = getBeijingTime();
+            calendarState.displayYear = now.getFullYear();
+            calendarState.displayMonth = now.getMonth();
+            calendarState.selectedDay = now.getDate();
+            renderCalendar();
+            renderSchedules();
+        }
+
+        function getDateKey() {
+            return `${calendarState.displayYear}-${calendarState.displayMonth + 1}-${calendarState.selectedDay}`;
+        }
+
+        function loadSchedules() {
+            const saved = localStorage.getItem('salaryWidgetSchedules');
+            if (saved) {
+                schedules = JSON.parse(saved);
+            }
+        }
+
+        function saveSchedules() {
+            localStorage.setItem('salaryWidgetSchedules', JSON.stringify(schedules));
+        }
+
+        function renderSchedules() {
+            const dateKey = getDateKey();
+            const list = document.getElementById('scheduleList');
+            const title = document.getElementById('scheduleTitle');
+            
+            title.textContent = `${calendarState.displayMonth + 1}月${calendarState.selectedDay}日 日程`;
+            
+            list.innerHTML = '';
+            
+            const daySchedules = schedules[dateKey] || [];
+            
+            if (daySchedules.length === 0) {
+                const emptyEl = document.createElement('div');
+                emptyEl.style.cssText = 'text-align: center; opacity: 0.5; padding: 20px; font-size: 14px;';
+                emptyEl.textContent = '暂无日程';
+                list.appendChild(emptyEl);
+                return;
+            }
+            
+            daySchedules.forEach((schedule, index) => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'scheduleItem';
+                if (schedule.completed) {
+                    itemEl.classList.add('completed');
+                }
+                
+                const checkboxEl = document.createElement('div');
+                checkboxEl.className = 'scheduleCheckbox';
+                if (schedule.completed) {
+                    checkboxEl.classList.add('checked');
+                }
+                checkboxEl.onclick = (e) => {
+                    e.stopPropagation();
+                    if (!schedule.completed) {
+                        schedule.completed = true;
+                        saveSchedules();
+                        renderSchedules();
+                    } else {
+                        schedule.completed = false;
+                        saveSchedules();
+                        renderSchedules();
+                    }
+                };
+                
+                const textEl = document.createElement('div');
+                textEl.className = 'scheduleText';
+                textEl.textContent = schedule.text;
+                
+                itemEl.appendChild(checkboxEl);
+                itemEl.appendChild(textEl);
+                
+                if (!schedule.completed) {
+                    itemEl.onclick = () => {
+                        editingScheduleIndex = index;
+                        document.getElementById('scheduleModalTitle').textContent = '修改日程';
+                        document.getElementById('scheduleInput').value = schedule.text;
+                        document.getElementById('scheduleModal').style.display = 'flex';
+                    };
+                }
+                
+                list.appendChild(itemEl);
+            });
+        }
+
+        function addSchedule() {
+            editingScheduleIndex = null;
+            document.getElementById('scheduleModalTitle').textContent = '添加日程';
+            document.getElementById('scheduleInput').value = '';
+            document.getElementById('scheduleModal').style.display = 'flex';
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('scheduleModal').style.display = 'none';
+        }
+
+        document.getElementById('scheduleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const text = document.getElementById('scheduleInput').value.trim();
+            if (text) {
+                const dateKey = getDateKey();
+                if (!schedules[dateKey]) {
+                    schedules[dateKey] = [];
+                }
+                
+                if (editingScheduleIndex !== null) {
+                    schedules[dateKey][editingScheduleIndex].text = text;
+                } else {
+                    schedules[dateKey].push({ text: text, completed: false });
+                }
+                
+                saveSchedules();
+                renderSchedules();
+                closeScheduleModal();
+            }
+        });
+
+        function loadConfig() {
+            const saved = localStorage.getItem('salaryWidgetConfig');
+            if (saved) {
+                config = JSON.parse(saved);
+            } else {
+                showSettingsModal();
+            }
+        }
+
+        function saveConfig() {
+            localStorage.setItem('salaryWidgetConfig', JSON.stringify(config));
+        }
+
+        function showSettingsModal() {
+            document.getElementById('salaryInput').value = config.salary || '';
+            document.getElementById('restDouble').checked = config.restPlan === 'double';
+            document.getElementById('restSingleDouble').checked = config.restPlan === 'singleDouble';
+            document.getElementById('restCustom').checked = config.restPlan === 'custom';
+            document.getElementById('customRestDays').value = config.customRestDays || 8;
+            document.getElementById('workStartInput').value = config.workStart || '09:00';
+            document.getElementById('workEndInput').value = config.workEnd || '18:00';
+
+            document.getElementById('customRestGroup').style.display = config.restPlan === 'custom' ? 'block' : 'none';
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+
+        function closeSettingsModal() {
+            document.getElementById('settingsModal').style.display = 'none';
+            if (!config.salary || config.salary <= 0) {
+                showSettingsModal();
+            }
+        }
+
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const salary = parseFloat(document.getElementById('salaryInput').value);
+            const restPlan = document.querySelector('input[name="restPlan"]:checked').value;
+            const customRestDays = parseInt(document.getElementById('customRestDays').value) || 8;
+            const workStart = document.getElementById('workStartInput').value;
+            const workEnd = document.getElementById('workEndInput').value;
+
+            let isValid = true;
+            
+            if (!salary || salary <= 0) {
+                document.getElementById('salaryError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('salaryError').style.display = 'none';
+            }
+
+            const startParts = workStart.split(':');
+            const endParts = workEnd.split(':');
+            const startMinutes = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+            const endMinutes = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+
+            if (endMinutes <= startMinutes) {
+                document.getElementById('timeError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('timeError').style.display = 'none';
+            }
+
+            if (isValid) {
+                config = { salary, restPlan, customRestDays, workStart, workEnd };
+                saveConfig();
+                closeSettingsModal();
+                updateAll();
+            }
+        });
+
+        document.querySelector('input[name="restPlan"]').addEventListener('change', function() {
+            const restPlan = document.querySelector('input[name="restPlan"]:checked').value;
+            document.getElementById('customRestGroup').style.display = restPlan === 'custom' ? 'block' : 'none';
+        });
+
+        function getMonthDays(year, month) {
+            return new Date(year, month, 0).getDate();
+        }
+
+        function calculateWorkDays(year, month, restPlan, customRestDays) {
+            const totalDays = getMonthDays(year, month);
+            
+            if (restPlan === 'double') {
+                const firstDay = new Date(year, month - 1, 1).getDay();
+                let weekendCount = 0;
+                for (let i = 0; i < totalDays; i++) {
+                    const day = (firstDay + i) % 7;
+                    if (day === 0 || day === 6) {
+                        weekendCount++;
+                    }
+                }
+                return totalDays - weekendCount;
+            } else if (restPlan === 'singleDouble') {
+                return totalDays - 10;
+            } else {
+                return totalDays - customRestDays;
+            }
+        }
+
+        function calculateSalary() {
+            if (!config.salary || config.salary <= 0) {
+                return { amount: 0, hint: '请先配置薪资', isWorking: false, isOffWork: false };
+            }
+
+            const now = getBeijingTime();
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            const startParts = config.workStart.split(':');
+            const endParts = config.workEnd.split(':');
+            const startMinutes = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+            const endMinutes = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+
+            const workDays = calculateWorkDays(year, month, config.restPlan, config.customRestDays);
+            const workTotalSec = (endMinutes - startMinutes) * 60;
+
+            if (currentMinutes < startMinutes) {
+                return { amount: 0, hint: '还未上班哦', isWorking: false, isOffWork: false };
+            }
+
+            if (currentMinutes >= endMinutes) {
+                const dailySalary = config.salary / workDays;
+                return { amount: dailySalary, hint: '今日工作已完成', isWorking: false, isOffWork: true };
+            }
+
+            const workPassSec = (currentMinutes - startMinutes) * 60 + now.getSeconds();
+            const perSecondSalary = config.salary / workDays / workTotalSec;
+            const earned = perSecondSalary * workPassSec;
+
+            return { amount: earned, hint: '正在努力赚钱中...', isWorking: true, isOffWork: false };
+        }
+
+        function updateSalary() {
+            const result = calculateSalary();
+            const amountEl = document.getElementById('salaryAmount');
+            const hintEl = document.getElementById('salaryHint');
+
+            if (result.isOffWork || result.amount > 0) {
+                amountEl.textContent = `¥${result.amount.toFixed(2)}`;
+            } else {
+                amountEl.textContent = '--';
+            }
+            hintEl.textContent = result.hint;
+        }
+
+        function fetchWeather(city) {
+            const url = `https://v1.apizero.cn/api/moji-weather?city=${encodeURIComponent(city)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 0 && data.data) {
+                        weatherData = data.data;
+                        currentCity = data.data.city ? data.data.city.name : city;
+                        updateWeatherDisplay();
+                        localStorage.setItem('salaryWidgetWeather', JSON.stringify({ city: currentCity, data: weatherData, timestamp: Date.now() }));
+                    }
+                })
+                .catch(() => {
+                    const saved = localStorage.getItem('salaryWidgetWeather');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        if (Date.now() - parsed.timestamp < 5 * 60 * 60 * 1000) {
+                            weatherData = parsed.data;
+                            currentCity = parsed.city;
+                            updateWeatherDisplay();
+                        }
+                    }
+                });
+        }
+
+        function updateWeatherDisplay() {
+            const weatherPanel = document.getElementById('weatherPanel');
+            const cityEl = document.getElementById('weatherCity');
+            const tempEl = document.getElementById('weatherTemp');
+            const statusEl = document.getElementById('weatherStatus');
+            const highEl = document.getElementById('weatherHigh');
+            const lowEl = document.getElementById('weatherLow');
+            const realFeelEl = document.getElementById('weatherRealFeel');
+
+            if (weatherData && weatherData.condition) {
+                const condition = weatherData.condition;
+                const forecast = weatherData.forecast_day && weatherData.forecast_day[0];
+                
+                const weatherDesc = condition.condition || 'default';
+                
+                weatherPanel.className = 'weatherPanel default';
+                if (weatherDesc.includes('晴')) {
+                    weatherPanel.classList.add('sunny');
+                } else if (weatherDesc.includes('多云') || weatherDesc.includes('阴')) {
+                    weatherPanel.classList.add('cloudy');
+                } else if (weatherDesc.includes('雨') || weatherDesc.includes('雷')) {
+                    weatherPanel.classList.add('rainy');
+                } else if (weatherDesc.includes('雪')) {
+                    weatherPanel.classList.add('snowy');
+                }
+                
+                cityEl.textContent = currentCity;
+                tempEl.textContent = `${condition.temperature || '--'}°C`;
+                statusEl.textContent = weatherDesc;
+                
+                highEl.textContent = forecast ? `${forecast.temp_day}°C` : '--°C';
+                lowEl.textContent = forecast ? `${forecast.temp_night}°C` : '--°C';
+                realFeelEl.textContent = condition.real_feel ? `${condition.real_feel}°C` : '--°C';
+            } else {
+                cityEl.textContent = currentCity;
+                tempEl.textContent = '--°C';
+                statusEl.textContent = '加载失败';
+                highEl.textContent = '--°C';
+                lowEl.textContent = '--°C';
+                realFeelEl.textContent = '--°C';
+            }
+        }
+
+        function changeCity() {
+            document.getElementById('cityInput').value = currentCity;
+            document.getElementById('cityModal').style.display = 'flex';
+        }
+
+        function closeCityModal() {
+            document.getElementById('cityModal').style.display = 'none';
+        }
+
+        document.getElementById('cityForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const city = document.getElementById('cityInput').value.trim();
+            if (city) {
+                fetchWeather(city);
+                closeCityModal();
+            }
+        });
+
+        function updateCountdown() {
+            const now = getBeijingTime();
+            const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+            const startParts = config.workStart.split(':');
+            const endParts = config.workEnd.split(':');
+            const startMinutes = parseInt(startParts[0]) * 60 + parseInt(startParts[1]);
+            const endMinutes = parseInt(endParts[0]) * 60 + parseInt(endParts[1]);
+
+            const workTotalSec = (endMinutes - startMinutes) * 60;
+            
+            let remainingSec = 0;
+            let progress = 0;
+            let hint = '';
+
+            if (currentMinutes < startMinutes) {
+                remainingSec = workTotalSec;
+                progress = 0;
+                hint = '距离上班还有';
+            } else if (currentMinutes >= endMinutes) {
+                remainingSec = 0;
+                progress = 100;
+                hint = '今日工作已完成';
+            } else {
+                const workPassSec = (currentMinutes - startMinutes) * 60 + now.getSeconds();
+                remainingSec = workTotalSec - workPassSec;
+                progress = (workPassSec / workTotalSec) * 100;
+                hint = '距离下班还有';
+            }
+
+            const hours = Math.floor(remainingSec / 3600);
+            const minutes = Math.floor((remainingSec % 3600) / 60);
+            const seconds = remainingSec % 60;
+
+            document.getElementById('countdownText').textContent = 
+                `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('countdownHint').textContent = hint;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
+
+        function updateQuote() {
+            const now = getBeijingTime();
+            const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+            const quoteIndex = dayOfYear % QUOTES.length;
+            const quote = QUOTES[quoteIndex];
+            
+            document.getElementById('quoteContent').textContent = quote.content;
+            document.getElementById('quoteAuthor').textContent = `—— ${quote.author}`;
+        }
+
+        function updateAll() {
+            updateTime();
+            updateSalary();
+            updateCountdown();
+        }
+
+        function clearAllCache() {
+            if (confirm('确定要清除所有缓存吗？这将删除保存的设置、天气数据和日程数据。')) {
+                localStorage.removeItem('salaryWidgetConfig');
+                localStorage.removeItem('salaryWidgetWeather');
+                localStorage.removeItem('salaryWidgetSchedules');
+                alert('缓存已清除，页面将重新加载。');
+                location.reload();
+            }
+        }
+
+        function init() {
+            loadConfig();
+            loadSchedules();
+            updateAll();
+            renderCalendar();
+            renderSchedules();
+            updateQuote();
+            
+            const savedWeather = localStorage.getItem('salaryWidgetWeather');
+            if (savedWeather) {
+                const parsed = JSON.parse(savedWeather);
+                if (Date.now() - parsed.timestamp < 5 * 60 * 60 * 1000) {
+                    weatherData = parsed.data;
+                    currentCity = parsed.city;
+                    updateWeatherDisplay();
+                } else {
+                    fetchWeather(currentCity);
+                }
+            } else {
+                fetchWeather(currentCity);
+            }
+
+            setInterval(updateAll, 1000);
+
+            setInterval(() => {
+                fetchWeather(currentCity);
+            }, 5 * 60 * 60 * 1000);
+
+            setInterval(() => {
+                renderCalendar();
+                updateQuote();
+            }, 60 * 60 * 1000);
+        }
+
+        init();
+    </script>
+</body>
+</html>
