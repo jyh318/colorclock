@@ -1677,9 +1677,11 @@
             }
         });
 
-        document.querySelector('input[name="restPlan"]').addEventListener('change', function() {
-            const restPlan = document.querySelector('input[name="restPlan"]:checked').value;
-            document.getElementById('customRestGroup').style.display = restPlan === 'custom' ? 'block' : 'none';
+        document.querySelector('.radio-group').addEventListener('change', function(e) {
+            if (e.target.name === 'restPlan') {
+                const restPlan = e.target.value;
+                document.getElementById('customRestGroup').style.display = restPlan === 'custom' ? 'block' : 'none';
+            }
         });
 
         function getMonthDays(year, month) {
