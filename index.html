@@ -117,6 +117,46 @@
             align-items: flex-start;
         }
 
+        .weatherActions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .weatherSettingBtn {
+            padding: 6px 12px;
+            font-size: 11px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 16px;
+            background: rgba(99, 102, 241, 0.2);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .weatherSettingBtn:hover {
+            background: rgba(99, 102, 241, 0.4);
+        }
+
+        .weatherClearBtn {
+            padding: 6px 12px;
+            font-size: 11px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 16px;
+            background: rgba(239, 68, 68, 0.15);
+            color: #fca5a5;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(10px);
+        }
+
+        .weatherClearBtn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: white;
+        }
+
         .weatherCity {
             font-size: 20px;
             font-weight: 500;
@@ -814,23 +854,30 @@
         }
 
         @media (max-width: 1200px) {
+            body {
+                overflow-y: auto;
+                height: auto;
+            }
+            
             .dashboard {
                 flex-direction: column;
                 overflow-y: auto;
                 height: auto;
                 min-height: 100vh;
+                -webkit-overflow-scrolling: touch;
             }
             
             .leftPanel, .middlePanel, .rightPanel {
                 flex: none;
                 width: 100%;
                 height: auto;
-                min-height: 300px;
+                min-height: auto;
             }
 
             .middlePanel {
                 grid-template-columns: 1fr;
-                grid-template-rows: repeat(4, 1fr);
+                grid-template-rows: repeat(4, auto);
+                gap: 16px;
             }
 
             .weatherTemp {
@@ -853,6 +900,208 @@
                 font-size: 32px;
             }
         }
+
+        /* 手机端适配 */
+        @media (max-width: 768px) {
+            .dashboard {
+                padding: 0;
+            }
+
+            .leftPanel {
+                min-height: auto;
+            }
+
+            .weatherPanel {
+                min-height: 280px;
+                padding: 20px;
+            }
+
+            .weatherTemp {
+                font-size: 56px;
+            }
+
+            .weatherStatus {
+                font-size: 20px;
+            }
+
+            .weatherDetails {
+                padding: 14px;
+            }
+
+            .weatherDetailItem {
+                font-size: 13px;
+            }
+
+            .weatherActions {
+                gap: 8px;
+            }
+
+            .weatherSettingBtn, .weatherClearBtn {
+                padding: 5px 10px;
+                font-size: 10px;
+            }
+
+            .middlePanel {
+                padding: 16px;
+                gap: 12px;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+            }
+
+            .clockCard, .salaryCard, .countdownCard, .quoteCard {
+                padding: 16px;
+                min-height: 130px;
+            }
+
+            .clockTime {
+                font-size: 32px;
+            }
+
+            .clockDateInfo {
+                font-size: 14px;
+            }
+
+            .salaryAmount {
+                font-size: 28px;
+            }
+
+            .countdownText {
+                font-size: 32px;
+            }
+
+            .quoteContent {
+                font-size: 16px;
+            }
+
+            .rightPanel {
+                min-height: auto;
+            }
+
+            .calendarPanel {
+                min-height: 500px;
+                padding: 20px;
+            }
+
+            .calendarBigDay {
+                font-size: 42px;
+            }
+
+            .calendarMonth {
+                font-size: 20px;
+            }
+
+            .calendarDay {
+                height: 36px;
+                font-size: 16px;
+            }
+
+            .calendarSchedule {
+                flex: 0 0 auto;
+                max-height: 200px;
+            }
+
+            .stars {
+                display: none;
+            }
+
+            .aurora {
+                display: none;
+            }
+        }
+
+        /* 小屏手机 */
+        @media (max-width: 480px) {
+            .weatherPanel {
+                min-height: 260px;
+                padding: 16px;
+            }
+
+            .weatherTemp {
+                font-size: 48px;
+            }
+
+            .weatherCity {
+                font-size: 18px;
+            }
+
+            .weatherStatus {
+                font-size: 18px;
+            }
+
+            .weatherHeader {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .weatherActions {
+                gap: 6px;
+            }
+
+            .weatherSettingBtn, .weatherClearBtn {
+                padding: 5px 10px;
+                font-size: 10px;
+            }
+
+            .middlePanel {
+                padding: 12px;
+                gap: 10px;
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto auto;
+            }
+
+            .clockCard, .salaryCard, .countdownCard, .quoteCard {
+                padding: 14px;
+                min-height: 110px;
+            }
+
+            .clockTime {
+                font-size: 28px;
+            }
+
+            .countdownText {
+                font-size: 28px;
+            }
+
+            .salaryAmount {
+                font-size: 24px;
+            }
+
+            .quoteContent {
+                font-size: 14px;
+            }
+
+            .calendarPanel {
+                min-height: 450px;
+                padding: 16px;
+            }
+
+            .calendarBigDay {
+                font-size: 36px;
+            }
+
+            .calendarDay {
+                height: 32px;
+                font-size: 14px;
+            }
+
+            .calendarWeekday {
+                font-size: 14px;
+                padding: 8px 0;
+            }
+
+            .calendarSchedule {
+                padding: 12px;
+            }
+
+            .scheduleText {
+                font-size: 13px;
+            }
+
+            .modifyBtn, .clearCacheBtn {
+                padding: 4px 8px;
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -868,7 +1117,11 @@
                 <div class="weatherContent">
                     <div class="weatherHeader">
                         <div class="weatherCity" id="weatherCity">北京</div>
-                        <button class="changeCityBtn" onclick="changeCity()">切换城市</button>
+                        <div class="weatherActions">
+                            <button class="changeCityBtn" onclick="changeCity()">切换城市</button>
+                            <button class="weatherSettingBtn" onclick="showSettingsModal()">设置</button>
+                            <button class="weatherClearBtn" onclick="clearAllCache()">清除</button>
+                        </div>
                     </div>
                     <div class="weatherMain">
                         <div class="weatherTemp" id="weatherTemp">--°C</div>
@@ -903,8 +1156,6 @@
             </div>
 
             <div class="salaryCard">
-                <button class="modifyBtn" onclick="showSettingsModal()">修改设置</button>
-                <button class="clearCacheBtn" onclick="clearAllCache()">清除缓存</button>
                 <div class="salaryTitle">今日已赚工资</div>
                 <div class="salaryAmount" id="salaryAmount">¥0.00</div>
                 <div class="salaryHint" id="salaryHint"></div>
