@@ -92,6 +92,10 @@
             background: url('https://cdn.jsdelivr.net/gh/jyh318/images@main/snowy.jpg') center/cover no-repeat;
         }
 
+        .weatherPanel.fog {
+            background: url('https://cdn.jsdelivr.net/gh/jyh318/images@main/fog.jpg') center/cover no-repeat;
+        }
+
         .weatherOverlay {
             position: absolute;
             top: 0;
@@ -1791,6 +1795,8 @@
                     weatherPanel.classList.add('rainy');
                 } else if (weatherDesc.includes('雪')) {
                     weatherPanel.classList.add('snowy');
+                }else if (weatherDesc.includes('雾')) {
+                    weatherPanel.classList.add('fog');
                 }
                 
                 cityEl.textContent = currentCity;
